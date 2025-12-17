@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Robot Hand: Static Pivot Alignment v4.0</title>
+<style>
+  :root {
+    --skin-color: #e6e2d3;
+    --joint-color: #333;
+    --f-w: 24px; /* 指の幅 */
+  }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+  #controls { position: fixed; bottom: 30px; display: flex; gap: 20px; z-index: 100; }
+  button { background: #222; color: #ccc; border: 1px solid #444; padding: 12px 28px; border-radius: 30px; font-size: 14px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+  button.active { background: #f0c040; color: #000; border-color: #f0c040; }
+  
+  svg { height: 90vh; width: 100%; max-width: 600px; }
+
+  /* 初期状態で回転済み（アニメーションによる跳ねを防止） */
+  #hand-root { transform: rotate(-35deg); transform-origin: 200px 480px; }
+
+  .skin { fill: var(--skin-color); stroke: #1a1a1a; stroke-width: 2.5px; }
+  .dark-part { fill: #555; stroke: #1a1a1a; stroke-width: 2px; }
+  .joint { fill: var(--joint-color); stroke: #111; stroke-width: 2px; }
+  .nail { fill: #ddd; stroke: #1a1a1a; stroke-width: 1px; }
+
+  /* ケータイ：指の一直線に合わせた位置に出現 */
+  .phone { 
+    fill: #4da6ff; stroke: #111; stroke-width: 3px; rx: 10; ry: 10; 
+    opacity: 0; visibility: hidden; transition: opacity 0.3s; 
+  }
+
+  .f-base, .f-tip, #thumb-distal { transition: transform 0.4s ease-out, opacity 0.3s; }
+
+  /* --- HOLD STATE --- */
+  .is-holding .phone { opacity: 1; visibility: visible; }
+  .is-holding .f-base { opacity: 0; transform: scale(0); }
+
+  /* 指先：ケータイの長辺（X=155）へ一直線に吸着 */
+  /* 小指・薬指ユニット */
+  .is-holding #tip-little { transform: translate(32px, 70px) rotate(90deg); }
+  .is-holding #tip-ring   { transform: translate(32px, 46px) rotate(90deg); }
+  
+  /* 中指・人差し指ユニット（隙間なく接着） */
+  .is-holding #tip-middle { transform: translate(32px, 22px) rotate(90deg); }
+  .is-holding #tip-index  { transform: translate(32px, -2px) rotate(90deg); }
+
+  /* 親指：MP関節を支点に内側へ屈曲 */
+  .is-holding #thumb-distal { transform: rotate(-25deg); transform-origin: 329px 410px; }
+
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <button id="btnRelax" class="active" onclick="setState('relax')">RELAX</button>
+  <button id="btnHold" onclick="setState('hold')">HOLD</button>
+</div>
+
+<svg viewBox="0 0 400 800" id="canvas">
+  <path class="dark-part" d="M140 540 L140 680 L260 680 L260 540 Z" />
+  <ellipse class="joint" cx="200" cy="540" rx="65" ry="22" />
+
+  <g id="hand-root">
+    <path class="skin" d="M125 380 L110 460 Q140 560 200 560 Q260 560 290 460 L315 420 L275 380 L225 360 L175 360 Z" />
+    
+    <rect id="phone" class="phone" x="155" y="205" width="100" height="260" />
+
+    <g id="f-little">
+      <g class="f-base" style="transform-origin: 130px 380px;"><rect class="skin" x="118" y="300" width="24" height="80" rx="10"/><circle class="joint" cx="130" cy="380" r="14"/></g>
+      <g class="f-tip" id="tip-little" style="transform-origin: 130px 290px;"><rect class="skin" x="118" y="230" width="24" height="60" rx="10"/><circle class="joint" cx="130" cy="290" r="12"/></g>
+    </g>
+    <g id="f-ring">
+      <g class="f-base" style="transform-origin: 175px 360px;"><rect class="skin" x="163" y="270" width="24" height="90" rx="10"/><circle class="joint" cx="175" cy="360" r="14"/></g>
+      <g class="f-tip" id="tip-ring" style="transform-origin: 175px 260px;"><rect class="skin" x="163" y="200" width="24" height="60" rx="10"/><circle class="joint" cx="175" cy="260" r="12"/></g>
+    </g>
+    <g id="f-middle">
+      <g class="f-base" style="transform-origin: 225px 360px;"><rect class="skin" x="213" y="260" width="24" height="100" rx="10"/><circle class="joint" cx="225" cy="360" r="14"/></g>
+      <g class="f-tip" id="tip-middle" style="transform-origin: 225px 255px;"><rect class="skin" x="213" y="195" width="24" height="60" rx="10"/><circle class="joint" cx="225" cy="255" r="12"/></g>
+    </g>
+    <g id="f-index">
+      <g class="f-base" style="transform-origin: 275px 380px;"><rect class="skin" x="263" y="290" width="24" height="90" rx="10"/><circle class="joint" cx="275" cy="380" r="14"/></g>
+      <g class="f-tip" id="tip-index" style="transform-origin: 275px 280px;"><rect class="skin" x="263" y="220" width="24" height="60" rx="10"/><circle class="joint" cx="275" cy="280" r="12"/></g>
+    </g>
+
+    <g id="thumb-unit">
+      <ellipse class="skin" cx="320" cy="480" rx="28" ry="38" transform="rotate(-20 320 480)"/>
+      <rect class="skin" x="305" y="410" width="30" height="70" rx="12" transform="rotate(-15 320 480)" />
+      <g id="thumb-distal">
+        <rect class="skin" x="315" y="340" width="28" height="70" rx="10" transform="rotate(-15 329 410)" />
+        <circle class="joint" cx="329" cy="410" r="13" />
+      </g>
+    </g>
+  </g>
+</svg>
+
+<script>
+  function setState(state) {
+    const canvas = document.getElementById('canvas');
+    const btns = document.querySelectorAll('button');
+    btns.forEach(b => b.classList.remove('active'));
+    if (state === 'hold') {
+      canvas.classList.add('is-holding');
+      document.getElementById('btnHold').classList.add('active');
+    } else {
+      canvas.classList.remove('is-holding');
+      document.getElementById('btnRelax').classList.add('active');
+    }
+  }
+</script>
+</body>
+</html>
