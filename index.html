@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hand UI Stable</title>
+<title>Hand UI Stable Final</title>
 
 <style>
   body {
@@ -15,12 +15,22 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: system-ui, sans-serif;
   }
 
-  img {
+  /* 画像コンテナ */
+  #handArea {
+    position: relative;
     width: 260px;
     max-width: 80vw;
+    aspect-ratio: 3 / 4;
+  }
+
+  #handArea img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: auto;
   }
 
   .btns {
@@ -60,9 +70,11 @@
 
 <body>
 
-<!-- 画像：初期状態はHTMLで固定 -->
-<img id="openHand" src="./hand_open.png" style="display:block">
-<img id="holdHand" src="./hand_hold.png" style="display:none">
+<!-- hand area -->
+<div id="handArea">
+  <img id="openHand" src="./hand_open.png" style="z-index:2">
+  <img id="holdHand" src="./hand_hold.png" style="z-index:1">
+</div>
 
 <div class="btns">
   <button id="btnRelax" class="active">RELAX</button>
@@ -73,7 +85,6 @@
 <div id="hud"></div>
 
 <script>
-  // DOM取得
   const openHand = document.getElementById("openHand");
   const holdHand = document.getElementById("holdHand");
   const btnRelax = document.getElementById("btnRelax");
@@ -93,11 +104,10 @@
       extra;
   }
 
-  // 状態切替（displayを直接制御）
   btnRelax.onclick = () => {
     state = "RELAX";
-    openHand.style.display = "block";
-    holdHand.style.display = "none";
+    openHand.style.zIndex = 2;
+    holdHand.style.zIndex = 1;
     btnRelax.classList.add("active");
     btnHold.classList.remove("active");
     updateHUD("→ RELAX");
@@ -105,21 +115,19 @@
 
   btnHold.onclick = () => {
     state = "HOLD";
-    openHand.style.display = "none";
-    holdHand.style.display = "block";
+    openHand.style.zIndex = 1;
+    holdHand.style.zIndex = 2;
     btnHold.classList.add("active");
     btnRelax.classList.remove("active");
     updateHUD("→ HOLD");
   };
 
-  // HUDトグル
   btnHUD.onclick = () => {
     hudVisible = !hudVisible;
     hud.style.display = hudVisible ? "block" : "none";
     updateHUD("HUD toggled");
   };
 
-  // 初期HUD更新（表示はしない）
   updateHUD("init");
 </script>
 
