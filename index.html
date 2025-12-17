@@ -2,12 +2,11 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<title>Robot Hand: Static Pivot Alignment v4.0</title>
+<title>Robot Hand: Strict Static Alignment v4.1</title>
 <style>
   :root {
     --skin-color: #e6e2d3;
     --joint-color: #333;
-    --f-w: 24px; /* 指の幅 */
   }
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #111; display: flex; justify-content: center; align-items: center; overflow: hidden; }
   #controls { position: fixed; bottom: 30px; display: flex; gap: 20px; z-index: 100; }
@@ -16,37 +15,39 @@
   
   svg { height: 90vh; width: 100%; max-width: 600px; }
 
-  /* 初期状態で回転済み（アニメーションによる跳ねを防止） */
-  #hand-root { transform: rotate(-35deg); transform-origin: 200px 480px; }
+  /* 手のひら全体の傾きを「親指側」へ反転 (35deg) */
+  #hand-root { transform: rotate(35deg); transform-origin: 200px 480px; }
 
   .skin { fill: var(--skin-color); stroke: #1a1a1a; stroke-width: 2.5px; }
   .dark-part { fill: #555; stroke: #1a1a1a; stroke-width: 2px; }
   .joint { fill: var(--joint-color); stroke: #111; stroke-width: 2px; }
   .nail { fill: #ddd; stroke: #1a1a1a; stroke-width: 1px; }
 
-  /* ケータイ：指の一直線に合わせた位置に出現 */
+  /* ケータイ：親指側に傾いた掌に合わせて配置 */
   .phone { 
     fill: #4da6ff; stroke: #111; stroke-width: 3px; rx: 10; ry: 10; 
     opacity: 0; visibility: hidden; transition: opacity 0.3s; 
   }
 
-  .f-base, .f-tip, #thumb-distal { transition: transform 0.4s ease-out, opacity 0.3s; }
+  /* 親指が降ってくるのを防ぐため、translateを排除しtransformのみで制御 */
+  .f-base, .f-tip, #thumb-unit, #thumb-distal { 
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s; 
+  }
 
   /* --- HOLD STATE --- */
   .is-holding .phone { opacity: 1; visibility: visible; }
   .is-holding .f-base { opacity: 0; transform: scale(0); }
 
-  /* 指先：ケータイの長辺（X=155）へ一直線に吸着 */
-  /* 小指・薬指ユニット */
+  /* 4本の指先：位置は変えず、接着と一直線整列を維持 */
+  /* X座標 32px への吸着によりケータイのエッジを掴む */
   .is-holding #tip-little { transform: translate(32px, 70px) rotate(90deg); }
   .is-holding #tip-ring   { transform: translate(32px, 46px) rotate(90deg); }
-  
-  /* 中指・人差し指ユニット（隙間なく接着） */
   .is-holding #tip-middle { transform: translate(32px, 22px) rotate(90deg); }
   .is-holding #tip-index  { transform: translate(32px, -2px) rotate(90deg); }
 
-  /* 親指：MP関節を支点に内側へ屈曲 */
-  .is-holding #thumb-distal { transform: rotate(-25deg); transform-origin: 329px 410px; }
+  /* 親指：軸を固定し「降ってくる」動きを完全削除。その場での屈曲のみ */
+  #thumb-unit { transform-origin: 320px 480px; }
+  .is-holding #thumb-distal { transform: rotate(-35deg); transform-origin: 329px 410px; }
 
 </style>
 </head>
