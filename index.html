@@ -3,27 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hand UI Stable Final</title>
+<title>Hand UI Demo – Stable All-in-One</title>
 
 <style>
   body {
     margin: 0;
+    padding: 20px 0 40px;
     background: #000;
     color: #fff;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    font-family: system-ui, sans-serif;
+    justify-content: flex-start;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* 画像コンテナ */
+  /* ===== Hand Area ===== */
   #handArea {
     position: relative;
-    width: 260px;
-    max-width: 80vw;
+    width: 180px;        /* Xperia向けに小さめ */
+    max-width: 70vw;
     aspect-ratio: 3 / 4;
+    margin-bottom: 14px;
   }
 
   #handArea img {
@@ -31,12 +33,15 @@
     inset: 0;
     width: 100%;
     height: auto;
+    pointer-events: none;
   }
 
+  /* ===== Buttons ===== */
   .btns {
-    margin-top: 20px;
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   button {
@@ -44,19 +49,21 @@
     border-radius: 20px;
     border: none;
     font-size: 16px;
+    background: #444;
+    color: #fff;
   }
 
-  .active {
+  button.active {
     background: #f5c400;
     color: #000;
   }
 
-  /* HUD */
+  /* ===== HUD ===== */
   #hud {
     position: fixed;
     top: 10px;
     left: 10px;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     color: #0f0;
     font-size: 12px;
     padding: 8px;
@@ -70,27 +77,30 @@
 
 <body>
 
-<!-- hand area -->
+<!-- ===== Hand Images (same position, z-index swap) ===== -->
 <div id="handArea">
   <img id="openHand" src="./hand_open.png" style="z-index:2">
   <img id="holdHand" src="./hand_hold.png" style="z-index:1">
 </div>
 
+<!-- ===== Controls ===== -->
 <div class="btns">
   <button id="btnRelax" class="active">RELAX</button>
   <button id="btnHold">HOLD</button>
   <button id="btnHUD">HUD</button>
 </div>
 
+<!-- ===== HUD ===== -->
 <div id="hud"></div>
 
 <script>
+  /* ===== Elements ===== */
   const openHand = document.getElementById("openHand");
   const holdHand = document.getElementById("holdHand");
   const btnRelax = document.getElementById("btnRelax");
-  const btnHold = document.getElementById("btnHold");
-  const btnHUD = document.getElementById("btnHUD");
-  const hud = document.getElementById("hud");
+  const btnHold  = document.getElementById("btnHold");
+  const btnHUD   = document.getElementById("btnHUD");
+  const hud      = document.getElementById("hud");
 
   let state = "RELAX";
   let hudVisible = false;
@@ -104,6 +114,7 @@
       extra;
   }
 
+  /* ===== State Control (z-index only) ===== */
   btnRelax.onclick = () => {
     state = "RELAX";
     openHand.style.zIndex = 2;
@@ -122,12 +133,14 @@
     updateHUD("→ HOLD");
   };
 
+  /* ===== HUD Toggle ===== */
   btnHUD.onclick = () => {
     hudVisible = !hudVisible;
     hud.style.display = hudVisible ? "block" : "none";
     updateHUD("HUD toggled");
   };
 
+  /* ===== Init ===== */
   updateHUD("init");
 </script>
 
